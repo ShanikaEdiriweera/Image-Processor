@@ -97,10 +97,9 @@ function saveButton_Callback(hObject, eventdata, handles)
 % hObject    handle to saveButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global processed savePath
-%try to get the format of original
-savePath = 'processed.jpg';
-imwrite(processed, savePath);
+global processed 
+[file,path] = uiputfile('processed.jpg','Save Image');
+imwrite(processed, [path file]);
 
 % --- Executes on button press in resampleButton.
 % ------ Re-sample original image at 25% scale using bi-linear interpolation
@@ -108,19 +107,23 @@ function resampleButton_Callback(hObject, eventdata, handles)
 % hObject    handle to resampleButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-%load original for now
-global image2 processed
+global image processed
+resampledImage = imresize(image, 0.25, 'bilinear');
+processed = resampledImage;
 axes(handles.processedImage);
-imshow(image2);
-processed = image2;
-
+imshow(resampledImage);
 
 % --- Executes on button press in upsampleButton.
+% ------up-sample down-sampled image back to original size using nearest-neighbor method
 function upsampleButton_Callback(hObject, eventdata, handles)
 % hObject    handle to upsampleButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global image processed
+upsampledImage = imresize(image, 4, 'nearest');
+processed = upsampledImage;
+axes(handles.processedImage);
+imshow(upsampledImage);
 
 
 % --- Executes on button press in compareButton.
