@@ -22,7 +22,7 @@ function varargout = ImageProcessor(varargin)
 
 % Edit the above text to modify the response to help ImageProcessor
 
-% Last Modified by GUIDE v2.5 09-Aug-2016 06:40:55
+% Last Modified by GUIDE v2.5 10-Aug-2016 07:13:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,8 +80,8 @@ function loadButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global image image2
-[path, user_cance] = imgetfile();
-if user_cance
+[path, user_canceled] = imgetfile();
+if user_canceled
     msgbox(sprintf('Error'),'Error','Error');
     return
 end
@@ -98,7 +98,7 @@ function saveButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global processed 
-[file,path] = uiputfile('processed.jpg','Save Image');
+[file,path] = uiputfile('processed.JPEG','Save Image');
 imwrite(processed, [path file]);
 
 % --- Executes on button press in resampleButton.
@@ -131,21 +131,25 @@ function compareButton_Callback(hObject, eventdata, handles)
 % hObject    handle to compareButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global image processed
+set(handles.avg1 , 'string', num2str(mean2(image)));
+set(handles.avg2 , 'String', num2str(mean2(processed)));
+set(handles.sd1 , 'String', num2str(std2(image)));
+set(handles.sd2 , 'String', num2str(std2(processed)));
 
 
-
-function avgText_Callback(hObject, eventdata, handles)
-% hObject    handle to avgText (see GCBO)
+function avg1_Callback(hObject, eventdata, handles)
+% hObject    handle to avg1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of avgText as text
-%        str2double(get(hObject,'String')) returns contents of avgText as a double
+% Hints: get(hObject,'String') returns contents of avg1 as text
+%        str2double(get(hObject,'String')) returns contents of avg1 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function avgText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to avgText (see GCBO)
+function avg1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to avg1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -157,18 +161,18 @@ end
 
 
 
-function sdText_Callback(hObject, eventdata, handles)
-% hObject    handle to sdText (see GCBO)
+function sd1_Callback(hObject, eventdata, handles)
+% hObject    handle to sd1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of sdText as text
-%        str2double(get(hObject,'String')) returns contents of sdText as a double
+% Hints: get(hObject,'String') returns contents of sd1 as text
+%        str2double(get(hObject,'String')) returns contents of sd1 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function sdText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sdText (see GCBO)
+function sd1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sd1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -218,5 +222,51 @@ greyImage = 0.2989 * image(:,:,1) + 0.5870 * image(:,:,2) + 0.1140 * image(:,:,3
 processed = greyImage;
 axes(handles.processedImage);
 imshow(greyImage);
+
+
+
+function avg2_Callback(hObject, eventdata, handles)
+% hObject    handle to avg2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of avg2 as text
+%        str2double(get(hObject,'String')) returns contents of avg2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function avg2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to avg2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function sd2_Callback(hObject, eventdata, handles)
+% hObject    handle to sd2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of sd2 as text
+%        str2double(get(hObject,'String')) returns contents of sd2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function sd2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sd2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 
