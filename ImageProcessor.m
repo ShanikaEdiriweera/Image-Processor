@@ -83,7 +83,7 @@ global image image2 file
 [file,path] = uigetfile('*.*','Load Image');
 image = imread([path file]);
 image2 = image;
-image = im2double(image);
+%image = im2double(image);
 axes(handles.originalImage);
 imshow(image);
 
@@ -262,17 +262,18 @@ function entropyUncompressButton_Callback(hObject, eventdata, handles)
 % hObject    handle to entropyUncompressButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%Load Coded Planes back
-load(strcat('run-length\run-length_',fileName,'.data'),'-mat','codedPlanes');
+global processed
+[file,path] = uigetfile('run-length.data','Load File');
+load([path file],'encodedPlanes','-mat');
 
-%Decompress 
+%Uncompress 
 decodedPlanes = [];
-for n = 1:numel(codedPlanes)
+for n = 1:numel(encodedPlanes)
     decodedPlane = [];
-    for i = 1:numel(codedPlanes{n})
+    for i = 1:numel(encodedPlanes{n})
         decodedLine = [];
         value = 0;
-        for j = codedPlanes{n}{i}
+        for j = encodedPlanes{n}{i}
             for k = 1:j
                 decodedLine = [decodedLine value];
             end
@@ -285,16 +286,16 @@ for n = 1:numel(codedPlanes)
         decodedPlane = [decodedPlane; decodedLine];
     end
     decodedPlanes(:,:,n) = decodedPlane;
-    %figure, imshow(decodedPlane);
 end
 
-%Merge bit planes and retrieve the image
-decodedImage = decodedPlanes(:,:,1);
+uncompressedImage = decodedPlanes(:,:,1);
 for n = 2:8
-    decodedImage = decodedImage + decodedPlanes(:,:,n).*(2^(n-1));
+    uncompressedImage = uncompressedImage + decodedPlanes(:,:,n).*(2^(n-1));
 end
-decodedImage = uint8(decodedImage);
-imwrite(out2,strcat('run-length\run-length-decoded_',fileName,'.png'),'PNG');
+uncompressedImage = uint8(uncompressedImage);
+processed = im2double(uncompressedImage);
+axes(handles.processedImage);
+imshow(uncompressedImage);
 
 
 % --- Executes on button press in runlengthUncompressButton.
@@ -302,17 +303,18 @@ function runlengthUncompressButton_Callback(hObject, eventdata, handles)
 % hObject    handle to runlengthUncompressButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global processed
 [file,path] = uigetfile('run-length.data','Load File');
 load([path file],'encodedPlanes','-mat');
 
 %Uncompress 
 decodedPlanes = [];
-for n = 1:numel(codedPlanes)
+for n = 1:numel(encodedPlanes)
     decodedPlane = [];
-    for i = 1:numel(codedPlanes{n})
+    for i = 1:numel(encodedPlanes{n})
         decodedLine = [];
         value = 0;
-        for j = codedPlanes{n}{i}
+        for j = encodedPlanes{n}{i}
             for k = 1:j
                 decodedLine = [decodedLine value];
             end
@@ -325,16 +327,16 @@ for n = 1:numel(codedPlanes)
         decodedPlane = [decodedPlane; decodedLine];
     end
     decodedPlanes(:,:,n) = decodedPlane;
-    %figure, imshow(decodedPlane);
 end
 
-%Merge bit planes and retrieve the image
-decodedImage = decodedPlanes(:,:,1);
+uncompressedImage = decodedPlanes(:,:,1);
 for n = 2:8
-    decodedImage = decodedImage + decodedPlanes(:,:,n).*(2^(n-1));
+    uncompressedImage = uncompressedImage + decodedPlanes(:,:,n).*(2^(n-1));
 end
-decodedImage = uint8(decodedImage);
-imwrite(out2,strcat('run-length\run-length-decoded_',fileName,'.png'),'PNG');
+uncompressedImage = uint8(uncompressedImage);
+processed = im2double(uncompressedImage);
+axes(handles.processedImage);
+imshow(uncompressedImage);
 
 % --- Executes on button press in greyscaleButton.
 % ------ Convert images to Gray scale with 8bpp format
