@@ -22,7 +22,7 @@ function varargout = ImageProcessor(varargin)
 
 % Edit the above text to modify the response to help ImageProcessor
 
-% Last Modified by GUIDE v2.5 10-Aug-2016 07:13:48
+% Last Modified by GUIDE v2.5 10-Aug-2016 22:17:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,15 +79,11 @@ function loadButton_Callback(hObject, eventdata, handles)
 % hObject    handle to loadButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global image image2
-[path, user_canceled] = imgetfile();
-if user_canceled
-    msgbox(sprintf('Error'),'Error','Error');
-    return
-end
-image = imread(path);
-image = im2double(image);
+global image image2 file
+[file,path] = uigetfile('*.*','Load Image');
+image = imread([path file]);
 image2 = image;
+image = im2double(image);
 axes(handles.originalImage);
 imshow(image);
 
@@ -188,6 +184,38 @@ function compressEntropyButton_Callback(hObject, eventdata, handles)
 % hObject    handle to compressEntropyButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global image2 processed file
+encodedPlanes = {};
+for n = 1:8
+    bitPlane = bitget(image2,n);
+    
+    encodedMap = {};
+    for i = 1:numel(bitPlane(:,1))
+        encodedRow = [];
+        value = 0;
+        count = 0;
+        for j = 1:numel(bitPlane(1,:))
+            if value==bitPlane(i,j)
+                count=count+1;
+            elseif value==0
+                value = 1;
+                encodedRow = [encodedRow count];
+                count = 1;
+            else
+                value = 0;
+                encodedRow = [encodedRow count];
+                count = 1;
+            end
+        end
+        encodedRow = [encodedRow count];
+        encodedMap{1,i} = encodedRow;
+    end
+    encodedPlanes{1,n} = encodedMap;
+end
+
+%Save compressed image data
+[file,path] = uiputfile('entropy.data','Save File');
+save([path file],'encodedPlanes','-mat');
 
 
 % --- Executes on button press in compressRunlengthButton.
@@ -195,21 +223,118 @@ function compressRunlengthButton_Callback(hObject, eventdata, handles)
 % hObject    handle to compressRunlengthButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global image2 processed file
+encodedPlanes = {};
+for n = 1:8
+    bitPlane = bitget(image2,n);
+    
+    encodedMap = {};
+    for i = 1:numel(bitPlane(:,1))
+        encodedRow = [];
+        value = 0;
+        count = 0;
+        for j = 1:numel(bitPlane(1,:))
+            if value==bitPlane(i,j)
+                count=count+1;
+            elseif value==0
+                value = 1;
+                encodedRow = [encodedRow count];
+                count = 1;
+            else
+                value = 0;
+                encodedRow = [encodedRow count];
+                count = 1;
+            end
+        end
+        encodedRow = [encodedRow count];
+        encodedMap{1,i} = encodedRow;
+    end
+    encodedPlanes{1,n} = encodedMap;
+end
+
+%Save compressed image data
+[file,path] = uiputfile('run-length.data','Save File');
+save([path file],'encodedPlanes','-mat');
 
 
-% --- Executes on button press in pushbutton9.
-function pushbutton9_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton9 (see GCBO)
+% --- Executes on button press in entropyUncompressButton.
+function entropyUncompressButton_Callback(hObject, eventdata, handles)
+% hObject    handle to entropyUncompressButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+%Load Coded Planes back
+load(strcat('run-length\run-length_',fileName,'.data'),'-mat','codedPlanes');
+
+%Decompress 
+decodedPlanes = [];
+for n = 1:numel(codedPlanes)
+    decodedPlane = [];
+    for i = 1:numel(codedPlanes{n})
+        decodedLine = [];
+        value = 0;
+        for j = codedPlanes{n}{i}
+            for k = 1:j
+                decodedLine = [decodedLine value];
+            end
+            if value == 0
+                value = 1;
+            else 
+                value = 0;
+            end
+        end
+        decodedPlane = [decodedPlane; decodedLine];
+    end
+    decodedPlanes(:,:,n) = decodedPlane;
+    %figure, imshow(decodedPlane);
+end
+
+%Merge bit planes and retrieve the image
+decodedImage = decodedPlanes(:,:,1);
+for n = 2:8
+    decodedImage = decodedImage + decodedPlanes(:,:,n).*(2^(n-1));
+end
+decodedImage = uint8(decodedImage);
+imwrite(out2,strcat('run-length\run-length-decoded_',fileName,'.png'),'PNG');
 
 
-% --- Executes on button press in pushbutton10.
-function pushbutton10_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton10 (see GCBO)
+% --- Executes on button press in runlengthUncompressButton.
+function runlengthUncompressButton_Callback(hObject, eventdata, handles)
+% hObject    handle to runlengthUncompressButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+[file,path] = uigetfile('run-length.data','Load File');
+load([path file],'encodedPlanes','-mat');
 
+%Uncompress 
+decodedPlanes = [];
+for n = 1:numel(codedPlanes)
+    decodedPlane = [];
+    for i = 1:numel(codedPlanes{n})
+        decodedLine = [];
+        value = 0;
+        for j = codedPlanes{n}{i}
+            for k = 1:j
+                decodedLine = [decodedLine value];
+            end
+            if value == 0
+                value = 1;
+            else 
+                value = 0;
+            end
+        end
+        decodedPlane = [decodedPlane; decodedLine];
+    end
+    decodedPlanes(:,:,n) = decodedPlane;
+    %figure, imshow(decodedPlane);
+end
+
+%Merge bit planes and retrieve the image
+decodedImage = decodedPlanes(:,:,1);
+for n = 2:8
+    decodedImage = decodedImage + decodedPlanes(:,:,n).*(2^(n-1));
+end
+decodedImage = uint8(decodedImage);
+imwrite(out2,strcat('run-length\run-length-decoded_',fileName,'.png'),'PNG');
 
 % --- Executes on button press in greyscaleButton.
 % ------ Convert images to Gray scale with 8bpp format

@@ -22,7 +22,7 @@ function varargout = ImageProcessor(varargin)
 
 % Edit the above text to modify the response to help ImageProcessor
 
-% Last Modified by GUIDE v2.5 09-Aug-2016 23:56:33
+% Last Modified by GUIDE v2.5 10-Aug-2016 07:13:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -79,15 +79,11 @@ function loadButton_Callback(hObject, eventdata, handles)
 % hObject    handle to loadButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global image image2
-[path, user_canceled] = imgetfile();
-if user_canceled
-    msgbox(sprintf('Error'),'Error','Error');
-    return
-end
-image = imread(path);
-image = im2double(image);
+global image image2 file
+[file,path] = uigetfile('*.*','Load Image');
+image = imread([path file]);
 image2 = image;
+image = im2double(image);
 axes(handles.originalImage);
 imshow(image);
 
@@ -132,26 +128,24 @@ function compareButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global image processed
-set(handles.avg1 , 'string', 'hi');
-set(handles.avg1 , 'String', 'as');
-%set(handles.avg1 , 'string', num2str(mean2(image)));
-%set(handles.avg2 , 'String', num2str(mean2(processed)));
+set(handles.avg1 , 'string', num2str(mean2(image)));
+set(handles.avg2 , 'String', num2str(mean2(processed)));
 set(handles.sd1 , 'String', num2str(std2(image)));
 set(handles.sd2 , 'String', num2str(std2(processed)));
 
 
-function avgText_Callback(hObject, eventdata, handles)
-% hObject    handle to avgText (see GCBO)
+function avg1_Callback(hObject, eventdata, handles)
+% hObject    handle to avg1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of avgText as text
-%        str2double(get(hObject,'String')) returns contents of avgText as a double
+% Hints: get(hObject,'String') returns contents of avg1 as text
+%        str2double(get(hObject,'String')) returns contents of avg1 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function avgText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to avgText (see GCBO)
+function avg1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to avg1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -163,18 +157,18 @@ end
 
 
 
-function sdText_Callback(hObject, eventdata, handles)
-% hObject    handle to sdText (see GCBO)
+function sd1_Callback(hObject, eventdata, handles)
+% hObject    handle to sd1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of sdText as text
-%        str2double(get(hObject,'String')) returns contents of sdText as a double
+% Hints: get(hObject,'String') returns contents of sd1 as text
+%        str2double(get(hObject,'String')) returns contents of sd1 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function sdText_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sdText (see GCBO)
+function sd1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sd1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -190,6 +184,38 @@ function compressEntropyButton_Callback(hObject, eventdata, handles)
 % hObject    handle to compressEntropyButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global image2 processed file
+encodedPlanes = {};
+for n = 1:8
+    bitPlane = bitget(image2,n);
+    
+    encodedMap = {};
+    for i = 1:numel(bitPlane(:,1))
+        encodedRow = [];
+        value = 0;
+        count = 0;
+        for j = 1:numel(bitPlane(1,:))
+            if value==bitPlane(i,j)
+                count=count+1;
+            elseif value==0
+                value = 1;
+                encodedRow = [encodedRow count];
+                count = 1;
+            else
+                value = 0;
+                encodedRow = [encodedRow count];
+                count = 1;
+            end
+        end
+        encodedRow = [encodedRow count];
+        encodedMap{1,i} = encodedRow;
+    end
+    encodedPlanes{1,n} = encodedMap;
+end
+
+%Save compressed image data
+[file,path] = uiputfile('entropy.data','Save File');
+save([path file],'encodedPlanes','-mat');
 
 
 % --- Executes on button press in compressRunlengthButton.
@@ -197,6 +223,38 @@ function compressRunlengthButton_Callback(hObject, eventdata, handles)
 % hObject    handle to compressRunlengthButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global image2 processed file
+encodedPlanes = {};
+for n = 1:8
+    bitPlane = bitget(image2,n);
+    
+    encodedMap = {};
+    for i = 1:numel(bitPlane(:,1))
+        encodedRow = [];
+        value = 0;
+        count = 0;
+        for j = 1:numel(bitPlane(1,:))
+            if value==bitPlane(i,j)
+                count=count+1;
+            elseif value==0
+                value = 1;
+                encodedRow = [encodedRow count];
+                count = 1;
+            else
+                value = 0;
+                encodedRow = [encodedRow count];
+                count = 1;
+            end
+        end
+        encodedRow = [encodedRow count];
+        encodedMap{1,i} = encodedRow;
+    end
+    encodedPlanes{1,n} = encodedMap;
+end
+
+%Save compressed image data
+[file,path] = uiputfile('run-length.data','Save File');
+save([path file],'encodedPlanes','-mat');
 
 
 % --- Executes on button press in pushbutton9.
@@ -204,6 +262,39 @@ function pushbutton9_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton9 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+%Load Coded Planes back
+load(strcat('run-length\run-length_',fileName,'.data'),'-mat','codedPlanes');
+
+%Decompress 
+decodedPlanes = [];
+for n = 1:numel(codedPlanes)
+    decodedPlane = [];
+    for i = 1:numel(codedPlanes{n})
+        decodedLine = [];
+        value = 0;
+        for j = codedPlanes{n}{i}
+            for k = 1:j
+                decodedLine = [decodedLine value];
+            end
+            if value == 0
+                value = 1;
+            else 
+                value = 0;
+            end
+        end
+        decodedPlane = [decodedPlane; decodedLine];
+    end
+    decodedPlanes(:,:,n) = decodedPlane;
+    %figure, imshow(decodedPlane);
+end
+
+%Merge bit planes and retrieve the image
+decodedImage = decodedPlanes(:,:,1);
+for n = 2:8
+    decodedImage = decodedImage + decodedPlanes(:,:,n).*(2^(n-1));
+end
+decodedImage = uint8(decodedImage);
+imwrite(out2,strcat('run-length\run-length-decoded_',fileName,'.png'),'PNG');
 
 
 % --- Executes on button press in pushbutton10.
@@ -227,18 +318,18 @@ imshow(greyImage);
 
 
 
-function edit3_Callback(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function avg2_Callback(hObject, eventdata, handles)
+% hObject    handle to avg2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit3 as text
-%        str2double(get(hObject,'String')) returns contents of edit3 as a double
+% Hints: get(hObject,'String') returns contents of avg2 as text
+%        str2double(get(hObject,'String')) returns contents of avg2 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function avg2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to avg2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -250,18 +341,18 @@ end
 
 
 
-function edit4_Callback(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
+function sd2_Callback(hObject, eventdata, handles)
+% hObject    handle to sd2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit4 as text
-%        str2double(get(hObject,'String')) returns contents of edit4 as a double
+% Hints: get(hObject,'String') returns contents of sd2 as text
+%        str2double(get(hObject,'String')) returns contents of sd2 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit4 (see GCBO)
+function sd2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sd2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
